@@ -1,0 +1,5 @@
+boto3
+mrjob[aws]
+warcio
+fastwarc
+-e git+https://github.com/commoncrawl/warc.git@main#egg=warc
