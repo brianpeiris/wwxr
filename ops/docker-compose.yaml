@@ -1,0 +1,13 @@
+version: "3.7"
+services:
+  db:
+    image: mongo:5
+    container_name: db
+  site:
+    build: ../site
+    image: site
+    container_name: site
+    volumes:
+      - ../site:/site
+    ports:
+      - "8081:8081"
