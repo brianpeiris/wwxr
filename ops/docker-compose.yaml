@@ -3,6 +3,8 @@ services:
   db:
     image: mongo:5
     container_name: db
+    ports:
+      - "27017"
   site:
     build: ../site
     image: site
