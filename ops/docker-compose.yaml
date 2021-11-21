@@ -13,3 +13,9 @@ services:
       - ../site:/site
     ports:
       - "8081:8081"
+  seed:
+    build: ../seed
+    image: seed
+    container_name: seed
+    volumes:
+      - ../seed:/seed

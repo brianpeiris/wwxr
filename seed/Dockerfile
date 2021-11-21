@@ -11,3 +11,4 @@ COPY requirements.txt .
 COPY install-requirements.sh ./
 RUN python3 -m venv /home/env
 RUN sh install-requirements.sh
+CMD sleep infinity
