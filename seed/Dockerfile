@@ -7,6 +7,7 @@ RUN apk add git
 RUN apk add g++
 RUN apk add zlib-dev
 RUN apk add lz4-dev
-COPY . .
+COPY requirements.txt .
+COPY install-requirements.sh ./
 RUN python3 -m venv /home/env
 RUN sh install-requirements.sh
