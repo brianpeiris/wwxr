@@ -1,1 +1,1 @@
-rm -rf output/ __pycache__/ env
+rm -rf output/ __pycache__/
