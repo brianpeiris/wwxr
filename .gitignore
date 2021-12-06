@@ -2,3 +2,5 @@ seed/crawl-data/
 seed/output/
 seed/__pycache__/
 site/node_modules/
+aws/.terraform/
+aws/terraform.tfstate*

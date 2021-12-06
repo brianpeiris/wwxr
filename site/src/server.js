@@ -13,7 +13,7 @@ app.get("/", async (req, res) => {
   res.render("index", { results });
 });
 
-const server = app.listen(8081, () => {
+const server = app.listen(80, () => {
   console.log("running");
 });
 
