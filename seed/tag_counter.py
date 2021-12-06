@@ -2,11 +2,11 @@ import re
 from collections import Counter
 from mrcc import CCJob
 import logging
-import pymongo
+# import pymongo
 
-client = pymongo.MongoClient('mongodb://db:27017')
-db = client.wwxr
-pages = db.pages
+# client = pymongo.MongoClient('mongodb://db:27017')
+# db = client.wwxr
+# pages = db.pages
 
 LOG = logging.getLogger('CCJob')
 
@@ -20,16 +20,16 @@ class TagCounter(CCJob):
             if b'Content-Type: text/html' in headers:
                 if VIDEO_TAG_PATTERN.search(body) is not None:
                     url = record.url
-                    pages.insert_one({'url': url})
+                    # pages.insert_one({'url': url})
                     self.increment_counter('commoncrawl', 'videos_found', 1)
-                    yield None, None
+                    yield url, None
                 self.increment_counter('commoncrawl', 'processed_pages', 1)
 
-    def reducer(self, keys, values):
-        yield None, None
+    def reducer(self, key, values):
+        yield key, None
 
-    def reducer_final(self):
-        client.close()
+    # def reducer_final(self):
+    #     client.close()
 
 
 if __name__ == '__main__':

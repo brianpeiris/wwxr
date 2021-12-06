@@ -1,3 +1,3 @@
 cd "$(dirname "$0")"
 cd ..
-docker-compose up --build
+docker-compose up --build $1

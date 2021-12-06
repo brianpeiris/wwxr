@@ -4,3 +4,5 @@ seed/__pycache__/
 site/node_modules/
 aws/.terraform/
 aws/terraform.tfstate*
+seed/mrjob.conf
+seed/tag_counter_emr.py
