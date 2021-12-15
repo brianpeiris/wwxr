@@ -3,10 +3,12 @@ provider "aws" {
 }
 
 resource "aws_vpc" "wwxr_vpc" {
+	tags = { Name = "wwxr_vpc" }
 	cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_security_group" "wwxr_security_group" {
+	tags = { Name = "wwxr_security_group" }
 	vpc_id = aws_vpc.wwxr_vpc.id
 	ingress {
 		cidr_blocks = [ "0.0.0.0/0" ]
@@ -29,9 +31,11 @@ resource "aws_security_group" "wwxr_security_group" {
 }
 
 resource "aws_internet_gateway" "wwxr_internet_gateway" {
+	tags = { Name = "wwxr_internet_gateway" }
 	vpc_id = aws_vpc.wwxr_vpc.id
 }
 resource "aws_route_table" "wwxr_route_table" {
+	tags = { Name = "wwxr_route_table" }
 	vpc_id = aws_vpc.wwxr_vpc.id
 	route {
 		cidr_block = "0.0.0.0/0"
@@ -40,6 +44,7 @@ resource "aws_route_table" "wwxr_route_table" {
 }
 
 resource "aws_subnet" "wwxr_subnet" {
+	tags = { Name = "wwxr_subnet" }
 	vpc_id = aws_vpc.wwxr_vpc.id
 	cidr_block = "10.0.1.0/24"
 }
@@ -49,6 +54,7 @@ resource "aws_route_table_association" "wwxr_route_table_association" {
 }
 
 resource "aws_instance" "wwxr_base" {
+	tags = { Name = "wwxr_base" }
 	ami = "ami-083654bd07b5da81d"
 	instance_type = "t2.micro"
 	subnet_id = aws_subnet.wwxr_subnet.id
