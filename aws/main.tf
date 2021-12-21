@@ -56,7 +56,7 @@ resource "aws_route_table_association" "wwxr_route_table_association" {
 resource "aws_instance" "wwxr_base" {
 	tags = { Name = "wwxr_base" }
 	ami = "ami-083654bd07b5da81d"
-	instance_type = "t2.micro"
+	instance_type = "t3a.xlarge"
 	subnet_id = aws_subnet.wwxr_subnet.id
 	key_name = "wwxr_key"
 	associate_public_ip_address = true
