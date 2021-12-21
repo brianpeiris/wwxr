@@ -10,6 +10,11 @@ app.get("/", async (req, res) => {
   const { client, db } = await connectMongo();
   const pages = await db.collection("pages");
   const results = await pages.find({}).toArray();
+  for (const result of results) {
+    for (let i = 0; i < result.models.length; i++) {
+      result.models[i] = new URL(result.models[i], result.url).href;
+    }
+  }
   res.render("index", { results });
 });
 

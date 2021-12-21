@@ -1,9 +1,26 @@
 <!doctype html>
 <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body { font-family: sans-serif; }
+      .tag { border: 1px solid black; padding: 0.1em 0.1em; display: inline-block; text-decoration: none; width: 1em; height: 1em; text-align: center;  }
+      .url { display: block; color: #666; margin-top: 0.2em; }
+      p { margin-top: 0.2em; }
+    </style>
+  </head>
   <body>
     {{#each results}}
       <div>
-        <a href="{{url}}">{{url}}</a>
+        {{#if hasScene}}
+        <span class="tag">a</span>
+        {{/if}}
+        {{#each models}}
+        <a class="tag" href="intent://arvr.google.com/scene-viewer/1.0?file={{this}}#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url={{this}};end;">m</a>
+        {{/each}}
+        <a href="{{url}}">{{#if title}} {{title}} {{else}} {{url}} {{/if}}</a>
+        <span class="url">{{url}}</span>
+        <p>{{description}}</p>
       </div>
     {{/each}}
   </body>

@@ -1,11 +1,14 @@
 {
   "private": true,
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.44.0",
     "express": "^4.17.1",
     "hbs": "^4.1.2",
+    "he": "^1.2.0",
     "mongodb": "^4.1.4"
   },
   "devDependencies": {
-    "nodemon": "^2.0.14"
+    "nodemon": "^2.0.14",
+    "prettier": "^2.5.1"
   }
 }
