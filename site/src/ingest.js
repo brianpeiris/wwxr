@@ -17,6 +17,8 @@ const s3Client = new S3Client({ region: "us-east-1" });
     new ListObjectsV2Command({ Bucket: "bp-wwxr-seed-87453a02" })
   );
 
+  let fileCount = 0;
+  let pageCount = 0;
   for (const result of results.Contents) {
     if (result.Key === "_SUCCESS") continue;
 
@@ -27,22 +29,31 @@ const s3Client = new S3Client({ region: "us-east-1" });
       })
     );
 
-    const rawOutput = await readStream(Body)
+    const rawOutput = await readStream(Body);
     if (!rawOutput) continue;
 
-    const urls = rawOutput.trim().split("\n").map(r => r.split("\t")).map(([url, info]) => [url.replaceAll(/^"|"$/g, ''), JSON.parse(info)]);
+    fileCount++;
+
+    const urls = rawOutput
+      .trim()
+      .split("\n")
+      .map((r) => r.split("\t"))
+      .map(([url, info]) => [url.replaceAll(/^"|"$/g, ""), JSON.parse(info)]);
 
     for (const [url, info] of urls) {
       await pages.insertOne({
         url,
         ...info,
         title: info.title && he.decode(info.title),
-        description: info.description && he.decode(info.description)
+        description: info.description && he.decode(info.description),
       });
+      pageCount++;
     }
   }
 
   client.close();
+
+  console.log(`Ingested ${fileCount} files, ${pageCount} pages`);
 })();
 
 function readStream(stream) {
