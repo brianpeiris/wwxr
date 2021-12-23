@@ -31,7 +31,7 @@ def parse_tags(html):
     return {
         'title': title,
         'description': description,
-        'models': list(map(lambda m : str(m, 'utf8'), model_match)),
-        'iosModels': list(map(lambda m : str(m, 'utf8'), model_ios_match)),
+        'models': list(set(map(lambda m : str(m, 'utf8'), model_match))),
+        'iosModels': list(set(map(lambda m : str(m, 'utf8'), model_ios_match))),
         'hasScene': scene_match is not None
     }

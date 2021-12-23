@@ -63,7 +63,7 @@ app.get("/", async (req, res) => {
     results,
     page,
     isFirstPage: page === 0, 
-    isLastPage: ((page + 1) * perPage) > totalCount,
+    isLastPage: ((page + 1) * perPage) >= totalCount,
     prevPage: page - 1,
     nextPage: page + 1,
     perPage,
