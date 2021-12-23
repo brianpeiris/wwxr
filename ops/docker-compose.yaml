@@ -13,9 +13,3 @@ services:
       - ../site:/site
     ports:
       - "80:80"
-  seed:
-    build: ../seed
-    image: seed
-    container_name: seed
-    volumes:
-      - ../seed:/seed
