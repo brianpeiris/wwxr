@@ -9,6 +9,7 @@ RUN apk add git
 RUN apk add g++
 RUN apk add zlib-dev
 RUN apk add lz4-dev
+RUN apk add openssh-client
 
 COPY requirements.txt .
 COPY install-requirements.sh ./

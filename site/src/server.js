@@ -47,11 +47,15 @@ app.get("/", async (req, res) => {
   for (const result of results) {
     result.prettyUrl = result.url.replace(/https?:\/\//, '');
     result.prettyTitle = result.title || result.url;
-    for (let i = 0; i < result.models.length; i++) {
-      result.models[i] = new URL(result.models[i], result.url).href;
+    if (result.models) {
+	    for (let i = 0; i < result.models.length; i++) {
+	      result.models[i] = new URL(result.models[i], result.url).href;
+	    }
     }
+    if (result.iosModels) {
     for (let i = 0; i < result.iosModels.length; i++) {
       result.iosModels[i] = new URL(result.iosModels[i], result.url).href;
+    }
     }
   }
 

@@ -7,3 +7,4 @@ aws/terraform.tfstate*
 seed/mrjob.conf
 seed/tag_counter_emr.py
 nohup.out
+seed/wwxr_key.pem

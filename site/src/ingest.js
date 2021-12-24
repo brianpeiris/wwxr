@@ -38,6 +38,17 @@ const s3Client = new S3Client({ region: "us-east-1" });
       .trim()
       .split("\n")
       .map((r) => r.split("\t"))
+      .filter(([url, info]) => {
+	      if (/[^\x00-\x7F]/.test(url)) return false;
+	      if (!info || info.trim().length === 0) return false
+	      let validJson = true;
+	      try {
+		      JSON.parse(info)
+	      } catch(e) {
+		      validJson = false;
+	      }
+	      return validJson;
+      })
       .map(([url, info]) => [url.replaceAll(/^"|"$/g, ""), JSON.parse(info)]);
 
     for (const [url, info] of urls) {
