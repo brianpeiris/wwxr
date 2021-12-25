@@ -1,10 +1,44 @@
 const path = require("path");
+const hbs = require("hbs");
 const app = require("express")();
 
 const { connectMongo } = require("./utils");
 
+hbs.registerPartials(__dirname + "/views/partials");
+
 app.set("view engine", "hbs");
 app.set("views", path.resolve(__dirname, "views"));
+
+app.get("/explore", async (req, res) => {
+  const { client, db } = await connectMongo();
+  const pages = await db.collection("pages");
+  const words = new Map();
+  const pageList = (await pages.find({}).toArray())
+  .filter(p => !p.url.includes("thirdlove.com"))
+  .filter(p => !p.url.includes("store.ui.com"))
+  let maxCount = 0;
+  const commonWords = "has have avec mit der vous une very more out use all its than die and are the you our with this your that will for from can back which also need any one und pour sur les".split(" ");
+  for (const page of pageList) {
+    const pageWords = ((page.title || "") + " " + (page.description || "")).toLowerCase().split(" ");
+    for (word of pageWords) {
+      const cleanWord = word.trim().replaceAll(/[\n~!@#$%\^&*()-_=+\[{\]};:'"\\\|,<.>/?`]/g, ' ').trim();
+      if (cleanWord.length <= 2) continue;
+      if (commonWords.includes(cleanWord)) continue;
+      if (!words.has(cleanWord)) words.set(cleanWord, 0);
+      const newCount = words.get(cleanWord) + 1;
+      words.set(cleanWord, newCount);
+      if (newCount > maxCount) maxCount = newCount;
+    }
+  }
+
+  const wordArr = Array.from(words.entries())
+    .filter(([word, count]) => count / maxCount > 0.005)
+    .map(([word, count]) => ([word, Math.max(10, Math.log(count / maxCount * 100) * 20)]));
+
+  res.render("explore", {
+    words: wordArr
+  });
+});
 
 app.get("/", async (req, res) => {
   const { client, db } = await connectMongo();
@@ -38,7 +72,9 @@ app.get("/", async (req, res) => {
         (p.description || "").toLowerCase().includes(lowerQuery) ||
         (p.url || "").toLowerCase().includes(lowerQuery))
     );
-  });
+  })
+  .filter(p => !p.url.includes("thirdlove.com"))
+  .filter(p => !p.url.includes("store.ui.com"))
   const totalCount = results.length;
   results = results.slice(page * perPage, (page + 1) * perPage);
 

@@ -1,86 +1,53 @@
-<!doctype html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body { font-family: sans-serif; }
-      .tag { 
-        border: 1px solid black;
-        padding: 0.1em 0.2em;
-        display: inline-block;
-        text-decoration: none;
-        height: 1em;
-        text-align: center;
-        margin-right: 0.2em;
-      }
-      .url { display: block; color: #666; margin-top: 0.2em; }
-      form { margin: 1em 0; }
-      form * { font-size: 14pt; }
-      h1 a { color: black; text-decoration: none; }
-      .desc { margin-top: 0.2em; height: 2.5em; overflow: hidden; position: relative; }
-      .fade { 
-        background: linear-gradient(transparent, white);
-        width: 100%; height: 1em;
-        position: absolute; bottom: 0;
-      }
-      .result { padding: 1em 0; border-bottom: 1px solid lightgrey; }
-      .header { display: flex; align-items: center; }
-      .url, .title { display: inline-block; max-width: 40em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .url { display: block }
-      .paging { margin: 1em 0; }
-    </style>
-  </head>
-  <body>
-    <h1><a href="/">wwxr</a></h1>
-    <form>
-      <input tabindex="1" name="q" value="{{q}}" />
-      <button>search</button>
-    </form>
-    <div>{{totalCount}} results</div>
-    {{#each results}}
-      <div class="result">
-        <div class="header">
-        {{#if hasScene}}
-        <span class="tag">a</span>
-        {{/if}}
+{{#> layout}}
+  <h1><a href="/">wwxr</a></h1>
+  <form>
+    <input tabindex="1" name="q" value="{{q}}" />
+    <button>search</button>
+  </form>
+  <div>{{totalCount}} results</div>
+  {{#each results}}
+    <div class="result">
+      <div class="header">
+      {{#if hasScene}}
+      <span class="tag">a</span>
+      {{/if}}
 
-        {{#if ../isAndroid}}
-        {{#each models}}
-        <a class="tag" href="intent://arvr.google.com/scene-viewer/1.0?file={{this}}#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url={{this}};end;">m</a>
-        {{/each}}
-        {{/if}}
+      {{#if ../isAndroid}}
+      {{#each models}}
+      <a class="tag" href="intent://arvr.google.com/scene-viewer/1.0?file={{this}}#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url={{this}};end;">m</a>
+      {{/each}}
+      {{/if}}
 
-        {{#if ../isIDevice}}
-        {{#each iosModels}}
-        <a class="tag" rel="ar" href="{{this}}">m</a>
-        {{/each}}
-        {{/if}}
+      {{#if ../isIDevice}}
+      {{#each iosModels}}
+      <a class="tag" rel="ar" href="{{this}}">m</a>
+      {{/each}}
+      {{/if}}
 
-        {{#each models}}
-        <a class="tag" href="{{this}}">gltf</a>
-        {{/each}}
+      {{#each models}}
+      <a class="tag" href="{{this}}">gltf</a>
+      {{/each}}
 
-        {{#if ../isAppleDevice}}
-        {{#each iosModels}}
-        <a class="tag" href="{{this}}">usdz</a>
-        {{/each}}
-        {{/if}}
+      {{#if ../isAppleDevice}}
+      {{#each iosModels}}
+      <a class="tag" href="{{this}}">usdz</a>
+      {{/each}}
+      {{/if}}
 
-        <a class="title" href="{{url}}" title="{{prettyTitle}}">{{prettyTitle}}</a>
-        </div>
-
-        <span class="url">{{prettyUrl}}</span>
-
-        <div class="desc">
-          {{description}}
-          <div class="fade"></div>
-        </div>
+      <a class="title" href="{{url}}" title="{{prettyTitle}}">{{prettyTitle}}</a>
       </div>
-    {{/each}}
 
-    <div class="paging">
-      <a {{#unless isFirstPage}}href="?q={{q}}&p={{prevPage}}"{{/unless}}>prev</a>
-      <a {{#unless isLastPage}}href="?q={{q}}&p={{nextPage}}"{{/unless}}>next</a>
+      <span class="url">{{prettyUrl}}</span>
+
+      <div class="desc">
+        {{description}}
+        <div class="fade"></div>
+      </div>
     </div>
-  </body>
-</html>
+  {{/each}}
+
+  <div class="paging">
+    <a {{#unless isFirstPage}}href="?q={{q}}&p={{prevPage}}"{{/unless}}>prev</a>
+    <a {{#unless isLastPage}}href="?q={{q}}&p={{nextPage}}"{{/unless}}>next</a>
+  </div>
+{{/layout}}

@@ -13,55 +13,67 @@ const s3Client = new S3Client({ region: "us-east-1" });
   const { client, db } = await connectMongo();
   const pages = db.collection("pages");
 
-  const results = await s3Client.send(
-    new ListObjectsV2Command({ Bucket: "bp-wwxr-seed-87453a02" })
-  );
+  let continuationToken = null;
 
   let fileCount = 0;
   let pageCount = 0;
-  for (const result of results.Contents) {
-    if (result.Key === "_SUCCESS") continue;
 
-    const { Body } = await s3Client.send(
-      new GetObjectCommand({
-        Bucket: "bp-wwxr-seed-87453a02",
-        Key: result.Key,
-      })
-    );
+  do {
 
-    const rawOutput = await readStream(Body);
-    if (!rawOutput) continue;
+    const params = { Bucket: "bp-wwxr-seed-87453a02" };
+    if (continuationToken) params.ContinuationToken = continuationToken;
+    const results = await s3Client.send(new ListObjectsV2Command(params));
 
-    fileCount++;
+    for (const result of results.Contents) {
+      if (result.Key.startsWith("tmp/")) continue;
+      if (result.Key.endsWith("_SUCCESS")) continue;
 
-    const urls = rawOutput
-      .trim()
-      .split("\n")
-      .map((r) => r.split("\t"))
-      .filter(([url, info]) => {
-        if (/[^\x00-\x7F]/.test(url)) return false;
-        if (!info || info.trim().length === 0) return false
-        let validJson = true;
-        try {
-          JSON.parse(info)
-        } catch(e) {
-          validJson = false;
-        }
-        return validJson;
-      })
-      .map(([url, info]) => [url.replaceAll(/^"|"$/g, ""), JSON.parse(info)])
-      .map(([url, info]) => ({
-        url,
-        ...info,
-        title: info.title && he.decode(info.title),
-        description: info.description && he.decode(info.description),
-      }));
+      const { Body } = await s3Client.send(
+        new GetObjectCommand({
+          Bucket: "bp-wwxr-seed-87453a02",
+          Key: result.Key,
+        })
+      );
 
-    await pages.insertMany(urls);
-    pageCount += urls.length;
+      const rawOutput = await readStream(Body);
+      if (!rawOutput) continue;
 
-    console.log(result.Key, urls.length);
-  }
+      fileCount++;
+
+      const urls = rawOutput
+        .trim()
+        .split("\n")
+        .map((r) => r.split("\t"))
+        .filter(([url, info]) => {
+          if (/[^\x00-\x7F]/.test(url)) return false;
+          if (!info || info.trim().length === 0) return false
+          let validJson = true;
+          try {
+            JSON.parse(info)
+          } catch(e) {
+            validJson = false;
+          }
+          return validJson;
+        })
+        .map(([url, info]) => [url.replaceAll(/^"|"$/g, ""), JSON.parse(info)])
+        .map(([url, info]) => ({
+          url,
+          ...info,
+          title: info.title && he.decode(info.title),
+          description: info.description && he.decode(info.description),
+        }));
+
+      if (urls.length) {
+        await pages.insertMany(urls);
+        pageCount += urls.length;
+      }
+
+      console.log(result.Key, urls.length);
+    }
+
+    continuationToken = results.NextContinuationToken;
+
+  } while(continuationToken);
 
   client.close();
 
