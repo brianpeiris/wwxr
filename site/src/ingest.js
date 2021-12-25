@@ -39,27 +39,28 @@ const s3Client = new S3Client({ region: "us-east-1" });
       .split("\n")
       .map((r) => r.split("\t"))
       .filter(([url, info]) => {
-	      if (/[^\x00-\x7F]/.test(url)) return false;
-	      if (!info || info.trim().length === 0) return false
-	      let validJson = true;
-	      try {
-		      JSON.parse(info)
-	      } catch(e) {
-		      validJson = false;
-	      }
-	      return validJson;
+        if (/[^\x00-\x7F]/.test(url)) return false;
+        if (!info || info.trim().length === 0) return false
+        let validJson = true;
+        try {
+          JSON.parse(info)
+        } catch(e) {
+          validJson = false;
+        }
+        return validJson;
       })
-      .map(([url, info]) => [url.replaceAll(/^"|"$/g, ""), JSON.parse(info)]);
-
-    for (const [url, info] of urls) {
-      await pages.insertOne({
+      .map(([url, info]) => [url.replaceAll(/^"|"$/g, ""), JSON.parse(info)])
+      .map(([url, info]) => ({
         url,
         ...info,
         title: info.title && he.decode(info.title),
         description: info.description && he.decode(info.description),
-      });
-      pageCount++;
-    }
+      }));
+
+    await pages.insertMany(urls);
+    pageCount += urls.length;
+
+    console.log(result.Key, urls.length);
   }
 
   client.close();
