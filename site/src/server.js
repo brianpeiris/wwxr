@@ -36,8 +36,6 @@ app.get("/explore", async (req, res) => {
     }
   }
 
-  console.log(Array.from(words.entries()).length);
-
   const wordArr = Array.from(words.entries())
     .filter(([word, count]) => count / maxCount > 0.005)
     .map(([word, count]) => ([word, Math.max(10, Math.log(count / maxCount * 100) * 20)]));
