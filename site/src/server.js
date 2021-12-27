@@ -1,10 +1,12 @@
 const path = require("path");
+const fs = require("fs");
 const hbs = require("hbs");
 const app = require("express")();
+const md = new require("markdown-it")({html: true});
 
 const { connectMongo } = require("./utils");
 
-hbs.registerPartials(__dirname + "/views/partials");
+hbs.registerPartials(path.resolve(__dirname, "views", "partials"));
 
 app.set("view engine", "hbs");
 app.set("views", path.resolve(__dirname, "views"));
@@ -21,15 +23,20 @@ app.get("/explore", async (req, res) => {
   for (const page of pageList) {
     const pageWords = ((page.title || "") + " " + (page.description || "")).toLowerCase().split(" ");
     for (word of pageWords) {
+      /*
       const cleanWord = word.trim().replaceAll(/[\n~!@#$%\^&*()-_=+\[{\]};:'"\\\|,<.>/?`]/g, ' ').trim();
       if (cleanWord.length <= 2) continue;
       if (commonWords.includes(cleanWord)) continue;
+      */
+      const cleanWord = new URL(page.url).hostname;
       if (!words.has(cleanWord)) words.set(cleanWord, 0);
       const newCount = words.get(cleanWord) + 1;
       words.set(cleanWord, newCount);
       if (newCount > maxCount) maxCount = newCount;
     }
   }
+
+  console.log(Array.from(words.entries()).length);
 
   const wordArr = Array.from(words.entries())
     .filter(([word, count]) => count / maxCount > 0.005)
@@ -107,6 +114,35 @@ app.get("/", async (req, res) => {
     perPage,
     totalCount,
   });
+});
+
+app.get("/blog", (req, res) => {
+  const files = fs.readdirSync(path.resolve(__dirname, "..", "blog")).filter(f => f.endsWith('.md'));
+  files.sort();
+  const posts = files.map(file => {
+    let [date, rest] = file.split("--");
+    const prettyDate = date.replace("T", " ");
+    slug = rest.replace(/\.md$/, "");
+    const title = slug.replaceAll("-", " ");
+    return {date, prettyDate, title, slug};
+  });
+  res.render("blog", {posts});
+});
+
+app.get("/blog/:post", (req, res) => {
+  const [date, slug] = req.params.post.split("--");
+  const file = `${req.params.post}.md`
+  const filePath = path.resolve(__dirname, "..", "blog", file)
+  if (fs.existsSync(filePath)) {
+    res.render("post", {
+      date, slug,
+      prettyDate: date.replace("T", " "),
+      title: slug.replaceAll("-", " "),
+      content: md.render(fs.readFileSync(filePath, 'utf8'))
+    });
+  } else {
+    res.sendStatus(404);
+  }
 });
 
 const server = app.listen(80, () => {
