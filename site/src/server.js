@@ -1,8 +1,10 @@
 const path = require("path");
 const fs = require("fs");
 const hbs = require("hbs");
-const app = require("express")();
-const md = new require("markdown-it")({html: true});
+const https = require("https");
+const express = require("express");
+const app = express();
+const md = new require("markdown-it")({ html: true });
 
 const { connectMongo } = require("./utils");
 
@@ -16,12 +18,17 @@ app.get("/explore", async (req, res) => {
   const pages = await db.collection("pages");
   const words = new Map();
   const pageList = (await pages.find({}).toArray())
-  .filter(p => !p.url.includes("thirdlove.com"))
-  .filter(p => !p.url.includes("store.ui.com"))
+    .filter((p) => !p.url.includes("thirdlove.com"))
+    .filter((p) => !p.url.includes("store.ui.com"));
   let maxCount = 0;
-  const commonWords = "has have avec mit der vous une very more out use all its than die and are the you our with this your that will for from can back which also need any one und pour sur les".split(" ");
+  const commonWords =
+    "has have avec mit der vous une very more out use all its than die and are the you our with this your that will for from can back which also need any one und pour sur les".split(
+      " "
+    );
   for (const page of pageList) {
-    const pageWords = ((page.title || "") + " " + (page.description || "")).toLowerCase().split(" ");
+    const pageWords = ((page.title || "") + " " + (page.description || ""))
+      .toLowerCase()
+      .split(" ");
     for (word of pageWords) {
       /*
       const cleanWord = word.trim().replaceAll(/[\n~!@#$%\^&*()-_=+\[{\]};:'"\\\|,<.>/?`]/g, ' ').trim();
@@ -38,10 +45,13 @@ app.get("/explore", async (req, res) => {
 
   const wordArr = Array.from(words.entries())
     .filter(([word, count]) => count / maxCount > 0.005)
-    .map(([word, count]) => ([word, Math.max(10, Math.log(count / maxCount * 100) * 20)]));
+    .map(([word, count]) => [
+      word,
+      Math.max(10, Math.log((count / maxCount) * 100) * 20),
+    ]);
 
   res.render("explore", {
-    words: wordArr
+    words: wordArr,
   });
 });
 
@@ -70,16 +80,17 @@ app.get("/", async (req, res) => {
   const page = parseInt(req.query.p || "0");
   const perPage = 10;
 
-  let results = (await pages.find({}).toArray()).filter((p) => {
-    return (
-      filter(p) &&
-      ((p.title || "").toLowerCase().includes(lowerQuery) ||
-        (p.description || "").toLowerCase().includes(lowerQuery) ||
-        (p.url || "").toLowerCase().includes(lowerQuery))
-    );
-  })
-  .filter(p => !p.url.includes("thirdlove.com"))
-  .filter(p => !p.url.includes("store.ui.com"))
+  let results = (await pages.find({}).toArray())
+    .filter((p) => {
+      return (
+        filter(p) &&
+        ((p.title || "").toLowerCase().includes(lowerQuery) ||
+          (p.description || "").toLowerCase().includes(lowerQuery) ||
+          (p.url || "").toLowerCase().includes(lowerQuery))
+      );
+    })
+    .filter((p) => !p.url.includes("thirdlove.com"))
+    .filter((p) => !p.url.includes("store.ui.com"));
   const totalCount = results.length;
   results = results.slice(page * perPage, (page + 1) * perPage);
 
@@ -115,36 +126,63 @@ app.get("/", async (req, res) => {
 });
 
 app.get("/blog", (req, res) => {
-  const files = fs.readdirSync(path.resolve(__dirname, "..", "blog")).filter(f => f.endsWith('.md'));
+  const files = fs
+    .readdirSync(path.resolve(__dirname, "..", "blog"))
+    .filter((f) => f.endsWith(".md"));
   files.sort();
-  const posts = files.map(file => {
+  const posts = files.map((file) => {
     let [date, rest] = file.split("--");
     const prettyDate = date.replace("T", " ");
     slug = rest.replace(/\.md$/, "");
     const title = slug.replaceAll("-", " ");
-    return {date, prettyDate, title, slug};
+    return { date, prettyDate, title, slug };
   });
-  res.render("blog", {posts});
+  res.render("blog", { posts });
 });
 
 app.get("/blog/:post", (req, res) => {
   const [date, slug] = req.params.post.split("--");
-  const file = `${req.params.post}.md`
-  const filePath = path.resolve(__dirname, "..", "blog", file)
+  const file = `${req.params.post}.md`;
+  const filePath = path.resolve(__dirname, "..", "blog", file);
   if (fs.existsSync(filePath)) {
     res.render("post", {
-      date, slug,
+      date,
+      slug,
       prettyDate: date.replace("T", " "),
       title: slug.replaceAll("-", " "),
-      content: md.render(fs.readFileSync(filePath, 'utf8'))
+      content: md.render(fs.readFileSync(filePath, "utf8")),
     });
   } else {
     res.sendStatus(404);
   }
 });
 
-const server = app.listen(80, () => {
-  console.log("running");
-});
+let server;
+if (fs.existsSync(path.resolve(__dirname, "..", "certs", "privkey.pem"))) {
+  server = https
+    .createServer(
+      {
+        cert: fs.readFileSync(
+          path.resolve(__dirname, "..", "certs", "fullchain.pem")
+        ),
+        key: fs.readFileSync(
+          path.resolve(__dirname, "..", "certs", "privkey.pem")
+        ),
+      },
+      app
+    )
+    .listen(443, () => {
+      console.log("running on 443");
+    });
+  const redirectApp = express();
+  redirectApp.get("/*", (req, res) => {
+    res.redirect("https://wwxr.io" + req.originalUrl);
+  });
+  redirectApp.listen(80);
+} else {
+  server = app.listen(80, () => {
+    console.log("running on 80");
+  });
+}
 
 process.on("SIGTERM", () => server.close());

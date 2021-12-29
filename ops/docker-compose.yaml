@@ -13,3 +13,4 @@ services:
       - ../site:/site
     ports:
       - "80:80"
+      - "443:443"

@@ -1,10 +1,10 @@
-seed/crawl-data/
-seed/output/
-seed/__pycache__/
-site/node_modules/
 aws/.terraform/
 aws/terraform.tfstate*
-seed/mrjob.conf
-seed/tag_counter_emr.py
 nohup.out
-seed/wwxr_key.pem
+seed/__pycache__/
+seed/crawl-data/
+seed/mrjob.conf
+seed/output/
+seed/tag_counter_emr.py
+site/certs/
+site/node_modules/
