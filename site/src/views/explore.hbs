@@ -1,5 +1,15 @@
 {{#> layout}}
-{{#each words}}
-<a class="word" href="/?q={{this.[0]}}" style="font-size: {{this.[1]}}px">{{this.[0]}}</a>
-{{/each}}
+  <style>
+    main { max-width: 1000px; margin: auto; }
+  </style>
+  <main>
+    <h1><a href="/">wwxr.io</a> - <a href="/explore">explore</a></h1>
+    <form onchange="this.submit()">
+      <label><input type="radio" name="t" value="keywords" {{#if types.keywords}}checked{{/if}} />keywords</label>
+      <label><input type="radio" name="t" value="domains" {{#if types.domains}}checked{{/if}} />domains</label>
+    </form>
+    {{#each words}}
+    <a class="word" href="/search?q={{this.[0]}}" style="font-size: {{this.[1]}}px">{{this.[0]}}</a>
+    {{/each}}
+  </main>
 {{/layout}}

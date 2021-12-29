@@ -5,6 +5,7 @@ const https = require("https");
 const express = require("express");
 const app = express();
 const md = new require("markdown-it")({ html: true });
+const shuffle = require("lodash.shuffle");
 
 const { connectMongo } = require("./utils");
 
@@ -13,28 +14,46 @@ hbs.registerPartials(path.resolve(__dirname, "views", "partials"));
 app.set("view engine", "hbs");
 app.set("views", path.resolve(__dirname, "views"));
 
+app.get("/", (req, res) => {
+  res.render("index");
+});
+
 app.get("/explore", async (req, res) => {
   const { client, db } = await connectMongo();
   const pages = await db.collection("pages");
-  const words = new Map();
+
+  const type = req.query.t || "keywords";
+
   const pageList = (await pages.find({}).toArray())
     .filter((p) => !p.url.includes("thirdlove.com"))
     .filter((p) => !p.url.includes("store.ui.com"));
+
+  const words = new Map();
+  const commonWords = `
+    has have avec mit der vous une very more out use all
+    its than die and are the you our with this your that 
+    will for from can back which also need any one und 
+    pour sur les size width height made make set new des
+    och
+  `.trim().replaceAll(/\n/g, "").split(" ").filter(w => !!w);
+
   let maxCount = 0;
-  const commonWords =
-    "has have avec mit der vous une very more out use all its than die and are the you our with this your that will for from can back which also need any one und pour sur les".split(
-      " "
-    );
   for (const page of pageList) {
-    const pageWords = ((page.title || "") + " " + (page.description || ""))
-      .toLowerCase()
-      .split(" ");
-    for (word of pageWords) {
-      /*
-      const cleanWord = word.trim().replaceAll(/[\n~!@#$%\^&*()-_=+\[{\]};:'"\\\|,<.>/?`]/g, ' ').trim();
-      if (cleanWord.length <= 2) continue;
-      if (commonWords.includes(cleanWord)) continue;
-      */
+    if (type === "keywords") {
+      const pageWords = ((page.title || "") + " " + (page.description || ""))
+        .toLowerCase()
+        .replaceAll(/[\n~!@#$%\^&*()-_=+\[{\]};:'"\\\|,<.>/?`]/g, ' ')
+        .split(" ");
+      for (word of pageWords) {
+        const cleanWord = word;
+        if (cleanWord.length <= 2) continue;
+        if (commonWords.includes(cleanWord)) continue;
+        if (!words.has(cleanWord)) words.set(cleanWord, 0);
+        const newCount = words.get(cleanWord) + 1;
+        words.set(cleanWord, newCount);
+        if (newCount > maxCount) maxCount = newCount;
+      }
+    } else {
       const cleanWord = new URL(page.url).hostname;
       if (!words.has(cleanWord)) words.set(cleanWord, 0);
       const newCount = words.get(cleanWord) + 1;
@@ -43,19 +62,31 @@ app.get("/explore", async (req, res) => {
     }
   }
 
-  const wordArr = Array.from(words.entries())
-    .filter(([word, count]) => count / maxCount > 0.005)
+  const threshold = {
+    keywords: 0.01,
+    domains: 0.005,
+  }[type];
+
+  const wordArr = shuffle(Array.from(words.entries())
+    .filter(([word, count]) => count / maxCount > threshold)
     .map(([word, count]) => [
       word,
-      Math.max(10, Math.log((count / maxCount) * 100) * 20),
-    ]);
+      Math.max(10, Math.log((count / maxCount) * 100) * 15),
+    ]));
+
+  const types = {
+    keywords: false,
+    domains: false,
+  };
+  types[type] = true;
 
   res.render("explore", {
     words: wordArr,
+    types
   });
 });
 
-app.get("/", async (req, res) => {
+app.get("/search", async (req, res) => {
   const { client, db } = await connectMongo();
   const pages = await db.collection("pages");
 
@@ -66,16 +97,16 @@ app.get("/", async (req, res) => {
 
   const query = req.query.q || "";
   let lowerQuery = query.toLowerCase().trim();
-  const isFilter = lowerQuery.match(/-?is:aframe/);
-  let filter = () => true;
-  if (isFilter) {
-    lowerQuery = lowerQuery.substring(isFilter.index + isFilter[0].length);
-    if (isFilter[0].startsWith("-")) {
-      filter = (p) => !p.hasScene;
-    } else {
-      filter = (p) => p.hasScene;
-    }
-  }
+
+  const type = req.query.t || "all";
+
+  let filter = {
+    all: () => true,
+    aframe: (p) => p.hasScene,
+    gltf: (p) => p.models && p.models.length,
+    usdz: (p) => p.iosModels && p.iosModels.length,
+  }[type];
+  if(!filter) filter = () => true;
 
   const page = parseInt(req.query.p || "0");
   const perPage = 10;
@@ -109,8 +140,17 @@ app.get("/", async (req, res) => {
     }
   }
 
-  res.render("index", {
+  const types = {
+    all: false,
+    aframe: false,
+    gltf: false,
+    usdz: false,
+  };
+  types[type] = true;
+
+  res.render("search", {
     q: req.query.q,
+    types,
     isAndroid,
     isIDevice,
     isAppleDevice,
