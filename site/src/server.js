@@ -14,9 +14,17 @@ hbs.registerPartials(path.resolve(__dirname, "views", "partials"));
 app.set("view engine", "hbs");
 app.set("views", path.resolve(__dirname, "views"));
 
+app.use("/static", express.static(path.resolve(__dirname, "..", "static")));
+
 app.get("/", (req, res) => {
   res.render("index");
 });
+
+const excludedDomains = [
+    "thirdlove.com",
+    "store.ui.com",
+    "welovemebel.com.ua",
+];
 
 app.get("/explore", async (req, res) => {
   const { client, db } = await connectMongo();
@@ -25,8 +33,7 @@ app.get("/explore", async (req, res) => {
   const type = req.query.t || "keywords";
 
   const pageList = (await pages.find({}).toArray())
-    .filter((p) => !p.url.includes("thirdlove.com"))
-    .filter((p) => !p.url.includes("store.ui.com"));
+    .filter((p) => excludedDomains.every(d => !p.url.includes(d)))
 
   const words = new Map();
   const commonWords = `
@@ -93,7 +100,7 @@ app.get("/search", async (req, res) => {
   const userAgent = (req.get("user-agent") || "").toLowerCase();
   const isAndroid = userAgent.includes("android");
   const isIDevice = userAgent.includes("iphone");
-  const isAppleDevice = true || isIDevice || userAgent.includes("macintosh");
+  const isAppleDevice = isIDevice || userAgent.includes("macintosh");
 
   const query = req.query.q || "";
   let lowerQuery = query.toLowerCase().trim();
@@ -120,8 +127,7 @@ app.get("/search", async (req, res) => {
           (p.url || "").toLowerCase().includes(lowerQuery))
       );
     })
-    .filter((p) => !p.url.includes("thirdlove.com"))
-    .filter((p) => !p.url.includes("store.ui.com"));
+    .filter((p) => excludedDomains.every(d => !p.url.includes(d)))
   const totalCount = results.length;
   results = results.slice(page * perPage, (page + 1) * perPage);
 
