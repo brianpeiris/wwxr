@@ -1,15 +1,24 @@
 {{#> layout}}
   <style>
     main { max-width: 1000px; margin: auto; }
+    .types { margin: 0.2em 0; }
   </style>
   <main>
     <h1><a href="/">wwxr.io</a> - <a href="/explore">explore</a></h1>
     <form onchange="this.submit()">
-      <label><input type="radio" name="t" value="keywords" {{#if types.keywords}}checked{{/if}} />keywords</label>
-      <label><input type="radio" name="t" value="domains" {{#if types.domains}}checked{{/if}} />domains</label>
+      <label><input type="radio" name="c" value="keywords" {{#if categories.keywords}}checked{{/if}} />keywords</label>
+      <label><input type="radio" name="c" value="domains" {{#if categories.domains}}checked{{/if}} />domains</label>
+      <div class="types">
+      <label><input type="radio" name="t" value="all" {{#if types.all}}checked{{/if}} />all</label>
+      <label><input type="radio" name="t" value="aframe" {{#if types.aframe}}checked{{/if}} />a-frame</label>
+      <label><input type="radio" name="t" value="gltf" {{#if types.gltf}}checked{{/if}} />gltf</label>
+      {{#if isAppleDevice}}
+      <label><input type="radio" name="t" value="usdz" {{#if types.usdz}}checked{{/if}} />usdz</label>
+      {{/if}}
+      </div>
     </form>
     {{#each words}}
-    <a class="word" href="/search?q={{this.[0]}}" style="font-size: {{this.[1]}}px">{{this.[0]}}</a>
+    <a class="word" href="/search?t={{../type}}&q={{this.[0]}}" style="font-size: {{this.[1]}}px">{{this.[0]}}</a>
     {{/each}}
   </main>
 {{/layout}}

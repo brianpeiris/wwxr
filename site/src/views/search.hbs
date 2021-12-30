@@ -44,11 +44,11 @@
       <input tabindex="1" name="q" value="{{q}}" />
       <button>search</button>
       <div class="types">
-      <label><input type="radio" name="t" value="all" {{#if types.all}}checked{{/if}} />all</label>
-      <label><input type="radio" name="t" value="aframe" {{#if types.aframe}}checked{{/if}} />a-frame</label>
-      <label><input type="radio" name="t" value="gltf" {{#if types.gltf}}checked{{/if}} />gltf</label>
+      <label><input type="radio" name="t" onchange="this.closest('form').submit()" value="all" {{#if types.all}}checked{{/if}} />all</label>
+      <label><input type="radio" name="t" onchange="this.closest('form').submit()" value="aframe" {{#if types.aframe}}checked{{/if}} />a-frame</label>
+      <label><input type="radio" name="t" onchange="this.closest('form').submit()" value="gltf" {{#if types.gltf}}checked{{/if}} />gltf</label>
       {{#if isAppleDevice}}
-      <label><input type="radio" name="t" value="usdz" {{#if types.usdz}}checked{{/if}} />usdz</label>
+      <label><input type="radio" name="t" onchange="this.closest('form').submit()" value="usdz" {{#if types.usdz}}checked{{/if}} />usdz</label>
       {{/if}}
       </div>
     </form>
@@ -98,8 +98,8 @@
     {{/each}}
 
     <div class="paging">
-      <a {{#unless isFirstPage}}href="?q={{q}}&p={{prevPage}}"{{/unless}}>prev</a>
-      <a {{#unless isLastPage}}href="?q={{q}}&p={{nextPage}}"{{/unless}}>next</a>
+      <a {{#unless isFirstPage}}href="?q={{q}}&t={{type}}&p={{prevPage}}"{{/unless}}>prev</a>
+      <a {{#unless isLastPage}}href="?q={{q}}&t={{type}}&p={{nextPage}}"{{/unless}}>next</a>
     </div>
   </main>
 {{/layout}}

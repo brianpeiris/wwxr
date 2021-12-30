@@ -26,70 +26,100 @@ const excludedDomains = [
     "welovemebel.com.ua",
 ];
 
+const exploreCache = new Map();
+
 app.get("/explore", async (req, res) => {
   const { client, db } = await connectMongo();
   const pages = await db.collection("pages");
 
-  const type = req.query.t || "keywords";
+  const category = req.query.c || "keywords";
+  const type = req.query.t || "all";
 
-  const pageList = (await pages.find({}).toArray())
-    .filter((p) => excludedDomains.every(d => !p.url.includes(d)))
+  const key = [category, type].join("-");
 
-  const words = new Map();
-  const commonWords = `
-    has have avec mit der vous une very more out use all
-    its than die and are the you our with this your that 
-    will for from can back which also need any one und 
-    pour sur les size width height made make set new des
-    och
-  `.trim().replaceAll(/\n/g, "").split(" ").filter(w => !!w);
+  if (!exploreCache.has(key)) {
+    let filter = {
+      all: () => true,
+      aframe: (p) => p.hasScene,
+      gltf: (p) => p.models && p.models.length,
+      usdz: (p) => p.iosModels && p.iosModels.length,
+    }[type];
+    if(!filter) filter = () => true;
 
-  let maxCount = 0;
-  for (const page of pageList) {
-    if (type === "keywords") {
-      const pageWords = ((page.title || "") + " " + (page.description || ""))
-        .toLowerCase()
-        .replaceAll(/[\n~!@#$%\^&*()-_=+\[{\]};:'"\\\|,<.>/?`]/g, ' ')
-        .split(" ");
-      for (word of pageWords) {
-        const cleanWord = word;
-        if (cleanWord.length <= 2) continue;
-        if (commonWords.includes(cleanWord)) continue;
+    const pageList = (await pages.find({}).toArray())
+      .filter((p) => excludedDomains.every(d => !p.url.includes(d)))
+      .filter(filter)
+
+    const words = new Map();
+    const commonWords = `
+      has have avec mit der vous une very more out use all
+      its than die and are the you our with this your that 
+      will for from can back which also need any one und 
+      pour sur les size width height made make set new des
+      och
+    `.trim().replaceAll(/\n/g, "").split(" ").filter(w => !!w);
+
+    let maxCount = 0;
+    for (const page of pageList) {
+      if (category === "keywords") {
+        const pageWords = ((page.title || "") + " " + (page.description || ""))
+          .toLowerCase()
+          .replaceAll(/[\n~!@#$%\^&*()-_=+\[{\]};:'"\\\|,<.>/?`]/g, ' ')
+          .split(" ");
+        for (word of pageWords) {
+          const cleanWord = word;
+          if (cleanWord.length <= 2) continue;
+          if (commonWords.includes(cleanWord)) continue;
+          if (!words.has(cleanWord)) words.set(cleanWord, 0);
+          const newCount = words.get(cleanWord) + 1;
+          words.set(cleanWord, newCount);
+          if (newCount > maxCount) maxCount = newCount;
+        }
+      } else {
+        const cleanWord = new URL(page.url).hostname.replace(/^www\./, "");
         if (!words.has(cleanWord)) words.set(cleanWord, 0);
         const newCount = words.get(cleanWord) + 1;
         words.set(cleanWord, newCount);
         if (newCount > maxCount) maxCount = newCount;
       }
-    } else {
-      const cleanWord = new URL(page.url).hostname;
-      if (!words.has(cleanWord)) words.set(cleanWord, 0);
-      const newCount = words.get(cleanWord) + 1;
-      words.set(cleanWord, newCount);
-      if (newCount > maxCount) maxCount = newCount;
     }
+
+    const threshold = {
+      keywords: 0.01,
+      domains: 0.0025,
+    }[category];
+
+    const wordArr = shuffle(Array.from(words.entries())
+      .filter(([word, count]) => count / maxCount > threshold)
+      .map(([word, count]) => [
+        word,
+        Math.max(12, Math.log((count / maxCount) * 500) * 10),
+      ]));
+
+    exploreCache.set(key, wordArr);
   }
 
-  const threshold = {
-    keywords: 0.01,
-    domains: 0.005,
-  }[type];
+  const wordArr = exploreCache.get(key);
 
-  const wordArr = shuffle(Array.from(words.entries())
-    .filter(([word, count]) => count / maxCount > threshold)
-    .map(([word, count]) => [
-      word,
-      Math.max(10, Math.log((count / maxCount) * 100) * 15),
-    ]));
-
-  const types = {
+  const categories = {
     keywords: false,
     domains: false,
+  };
+  categories[category] = true;
+
+  const types = {
+    all: false,
+    aframe: false,
+    gltf: false,
+    usdz: false,
   };
   types[type] = true;
 
   res.render("explore", {
     words: wordArr,
-    types
+    categories,
+    types,
+    type
   });
 });
 
@@ -156,6 +186,7 @@ app.get("/search", async (req, res) => {
 
   res.render("search", {
     q: req.query.q,
+    type,
     types,
     isAndroid,
     isIDevice,
