@@ -115,11 +115,16 @@ app.get("/explore", async (req, res) => {
   };
   types[type] = true;
 
+  const userAgent = (req.get("user-agent") || "").toLowerCase();
+  const isIDevice = userAgent.includes("iphone");
+  const isAppleDevice = isIDevice || userAgent.includes("macintosh");
+
   res.render("explore", {
     words: wordArr,
     categories,
     types,
-    type
+    type,
+    isAppleDevice
   });
 });
 
