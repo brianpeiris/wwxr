@@ -53,11 +53,11 @@ app.get("/explore", async (req, res) => {
     const words = new Map();
     const commonWords = `
       has have avec mit der vous une very more out use all
-      its than die and are the you our with this your that 
-      will for from can back which also need any one und 
+      its than die and are the you our with this your that
+      will for from can back which also need any one und
       pour sur les size width height made make set new des
-      och
-    `.trim().replaceAll(/\n/g, "").split(" ").filter(w => !!w);
+      och into most non ist est not für now but sans
+    `.trim().replaceAll(/\n/g, " ").split(" ").filter(w => !!w);
 
     let maxCount = 0;
     for (const page of pageList) {
@@ -89,17 +89,17 @@ app.get("/explore", async (req, res) => {
       domains: 0.0025,
     }[category];
 
-    const wordArr = shuffle(Array.from(words.entries())
+    const wordArr = Array.from(words.entries())
       .filter(([word, count]) => count / maxCount > threshold)
       .map(([word, count]) => [
         word,
         Math.max(12, Math.log((count / maxCount) * 500) * 10),
-      ]));
+      ]);
 
     exploreCache.set(key, wordArr);
   }
 
-  const wordArr = exploreCache.get(key);
+  const wordArr = shuffle(exploreCache.get(key));
 
   const categories = {
     keywords: false,
