@@ -1,9 +1,9 @@
 # wwxr
 
-wwxr was an experiment in crawling the Web for WebXR and XR content. It used crawl data from [Common Crawl](https://commoncrawl.org/) and [Elastic Map Reduce](https://aws.amazon.com/emr/) via [cc-mrjob](https://github.com/commoncrawl/cc-mrjob), to scrape the web for `<a-frame>` and `<model-viewer>` scenes. 
+wwxr was an experiment in crawling the Web for WebXR and XR content. It used crawl data from [Common Crawl](https://commoncrawl.org/), and [Elastic Map Reduce](https://aws.amazon.com/emr/) via [cc-mrjob](https://github.com/commoncrawl/cc-mrjob), to scrape the web for `<a-frame>` and `<model-viewer>` scenes. 
 Crawled data was ingested into a MongoDB instance, and made available via a simple nodejs search and browse interface.
 
-wwxr was useful as an experiment, and showed that it was valuable to have central access to XR content from across the web, with a search index of keywords, but the Common Crawl data source was limited. Future projects ought to consider using a live on-going crawl of the Web, using something like [Nutch](https://nutch.apache.org/).
+wwxr was useful as an experiment, and showed that it was valuable to have central access to XR content from across the Web, with a search index of keywords, but the Common Crawl data source was too limited to be generally useful, since CC only captures a random sample of the Web with each crawl. Future projects ought to consider using a live on-going crawl of the Web, using something like [Nutch](https://nutch.apache.org/).
 
 Ideally, WebXR content could also be published with meta data for easier crawling. See a discussion about this here: https://github.com/immersive-web/proposals/issues/73
 
