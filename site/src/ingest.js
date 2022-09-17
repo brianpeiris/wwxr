@@ -7,6 +7,7 @@ const he = require("he");
 
 const { connectMongo } = require("./utils");
 
+const s3Bucket = "your-output-bucket";
 const s3Client = new S3Client({ region: "us-east-1" });
 
 (async () => {
@@ -20,7 +21,7 @@ const s3Client = new S3Client({ region: "us-east-1" });
 
   do {
 
-    const params = { Bucket: "bp-wwxr-seed-87453a02" };
+    const params = { Bucket: s3Bucket };
     if (continuationToken) params.ContinuationToken = continuationToken;
     const results = await s3Client.send(new ListObjectsV2Command(params));
 
@@ -30,7 +31,7 @@ const s3Client = new S3Client({ region: "us-east-1" });
 
       const { Body } = await s3Client.send(
         new GetObjectCommand({
-          Bucket: "bp-wwxr-seed-87453a02",
+          Bucket: s3Bucket,
           Key: result.Key,
         })
       );

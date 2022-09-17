@@ -4,6 +4,7 @@ cat mrcc.py utils.py tag_counter.py | sed "s/from utils import parse_tags//" | s
 
 batch_size=1000
 cluster_id="your-cluster-id"
+output_bucket="your-output-bucket"
 
 for i in `seq 1 72`
 do
@@ -21,7 +22,7 @@ do
 	        --cluster-id $cluster_id \
 	        --no-read-logs \
 		--no-output \
-		--output-dir s3://bp-wwxr-seed-87453a02/output-$timestamp-$i/ \
+		--output-dir s3://$output_bucket/output-$timestamp-$i/ \
 		--jobconf mapreduce.jobs.maps=$batch_size \
 		--jobconf mapreduce.jobs.reduces=$batch_size \
 		/tmp/seed-paths-$i
